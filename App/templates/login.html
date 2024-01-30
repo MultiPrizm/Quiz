@@ -73,6 +73,9 @@
                     if (response.status === 418) {
                         alert('418:Неправильний логін чи пароль');
                     }
+                    if (response.status === 200){
+                        window.location.href = "/"
+                    }
                 })
                 .catch(error => alert('Помилка при відправці POST-запиту:'));
         }
@@ -93,8 +96,11 @@
                 }),
             })
                 .then(response => {
-                    if (response.status === 402) {
-                        alert('402:Помилка при реєстрації');
+                    if (response.status === 418) {
+                        alert('418:Помилка при реєстрації');
+                    }
+                    if (response.status === 200){
+                        window.location.href = "/"
                     }
                 })
                 .catch(error => alert('Помилка при відправці POST-запиту:'));

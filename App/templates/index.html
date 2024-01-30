@@ -48,8 +48,9 @@
 </head>
 <body>
     <header>
-        <button id="registerButton">Реєстрація</button>
-        <button id="loginButton">Вхід</button>
+        <button id="registerButton" onclick="window.location.href='/login.html'">Реєстрація</button>
+        <button id="loginButton" onclick="window.location.href='/login.html'">Вхід</button>
+        <button id="exitButton" onclick=delog() style="display: none;">Вийти з акаунту</button>
         <div id="userFrame" class="user-frame" style="display: none;"></div>
         <h1>Ласкаво просимо на "Вікториноманію"!</h1>
     </header>
@@ -89,8 +90,9 @@
                         document.getElementById('registerButton').style.display = 'none';
                         document.getElementById('loginButton').style.display = 'none';
                         document.getElementById('userFrame').style.display = 'block';
+                        document.getElementById('exitButton').style.display = 'block';
                         response.json().then(data => {
-                            document.getElementById('userFrame').innerText = 'Ласкаво, ' + data.name + '!';
+                            document.getElementById('userFrame').innerText = 'З поверненям, ' + data.name + '!';
                         });
                     } else {
 
@@ -98,6 +100,12 @@
                 })
                 .catch(error => console.error('Помилка при відправці запиту:', error));
         }
+
+        function delog() {
+            fetch('/delog')
+            location.reload()
+        }
+
         sendRequest();
     </script>
 </body>

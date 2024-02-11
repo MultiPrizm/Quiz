@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вікториноманія</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #3498db;
+            color: #fff;
+        }
+        section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .user-frame {
+            border: 2px solid #3498db;
+            padding: 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button id="registerButton" onclick="window.location.href='/login.html'">Реєстрація</button>
+        <button id="loginButton" onclick="window.location.href='/login.html'">Вхід</button>
+        <button id="exitButton" onclick=delog() style="display: none;">Вийти з акаунту</button>
+        <div id="userFrame" class="user-frame" style="display: none;"></div>
+        <h1>Ласкаво просимо на "Вікториноманію"!</h1>
+    </header>
+    <section>
+        <h2>🧠 Різноманіття тем:</h2>
+        <p>Ви зможете вибрати вікторини на різноманітні теми - від науки та історії до поп-культури та мовознавства...</p>
+    </section>
+    <section>
+        <h2>🏆 Змагайтеся та вчіться:</h2>
+        <p>Беріть участь у наших щотижневих турнірах, де вас чекають захоплюючі завдання та можливість виявити свою ерудицію...</p>
+    </section>
+    <section>
+        <h2>🤝 Спільнота ентузіастів:</h2>
+        <p>Приєднуйтеся до нашої активної спільноти ентузіастів, обговорюйте цікаві факти, діліться своїми знаннями та знаходьте нових друзів...</p>
+    </section>
+    <section>
+        <h2>🔍 Персоналізований досвід:</h2>
+        <p>Ми пропонуємо персоналізований підхід до вивчення. Ваші результати визначають ваш рівень і допомагають нам підготувати для вас найцікавіші вікторини...</p>
+    </section>
+    <section>
+        <h2>🚀 Почніть зараз:</h2>
+        <p>Не гайте часу, почніть свою вікторинну подорож прямо зараз! Реєстрація безкоштовна та проста...</p>
+    </section>
+    <footer>
+        <button id="goToSecondPageButton" onclick="window.location.href='/quiz'">Перейти на другу сторінку</button>
+        <p>Приєднуйтесь до "Вікториноманії" - де розум зустрічається з веселим навчанням!</p>
+    </footer>
+
+    <script>
+
+        function sendRequest() {
+
+            fetch('/log')
+                .then(response => {
+                    if (response.status === 200) {
+
+                        document.getElementById('registerButton').style.display = 'none';
+                        document.getElementById('loginButton').style.display = 'none';
+                        document.getElementById('userFrame').style.display = 'block';
+                        document.getElementById('exitButton').style.display = 'block';
+                        response.json().then(data => {
+                            document.getElementById('userFrame').innerText = 'З поверненям, ' + data.name + '!';
+                        });
+                    } else {
+
+                    }
+                })
+                .catch(error => console.error('Помилка при відправці запиту:', error));
+        }
+
+        function delog() {
+            fetch('/delog')
+            location.reload()
+        }
+
+        sendRequest();
+    </script>
+</body>
+</html>

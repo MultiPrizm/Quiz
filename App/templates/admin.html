@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін-сторінка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #dynamicInput {
+            display: none;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Адмін-сторінка</h2>
+    <form id="quizForm">
+
+        <label for="dropdown1">Список квізів:</label>
+        <select id="quizList" name="dropdown1">
+
+        </select>
+
+        <button type="button" onclick="AppQuiz()">Додати квіз</button>
+        <div id="quizInput" style="display: none;">
+            <label for="additionalInput">Назва квізу:</label>
+            <input type="quiztext" id="quiztext" name="additionalInput"/>
+        </div>
+
+        <button type="button" onclick="ConfQuiz()">Далі</button>
+
+
+    </form>
+    <form id="questionForm" style="display: none;">
+       
+        <label for="dropdown2">Список питань:</label>
+        <select id="questionList" name="dropdown2">
+
+        </select>
+
+        <label for="text1">Текст питання:</label>
+        <input type="text" id="questioncontent" name="text1" required>
+
+        <label for="text2">Відповідь 1:</label>
+        <input type="text" id="answer1" name="answer" required>
+
+        <label for="text3">Відповідь 2:</label>
+        <input type="text" id="answer2" name="answer" required>
+
+        <label for="text4">Відповідь 3:</label>
+        <input type="text" id="answer3" name="answer" required>
+
+        <label for="text5">Відповідь 4:</label>
+        <input type="text" id="answer4" name="answer" required>
+
+        <button type="button" onclick="AddQuestion()">Додати питання</button>
+        <div id="questionInput" style="display: none;">
+            <label for="additionalInput">Назва питання:</label>
+            <input type="questiontext" id="questiontext" name="additionalInput">
+        </div>
+
+        <pre>INFO: Щоб відповідь вважалась правильною, перший символ відповіді повинен бути "$"</pre>
+
+        <button type="button" id="normalButton" onclick="SaveQuestion()">Зберегти</button>
+        <button type="button" id="normalButton" onclick="submitForm()">Відмінити зміни</button>
+        <button type="button" id="normalButton" onclick="submitForm()">Відправити зміни са сервер</button>
+    </form>
+
+    <script>
+
+        const qList = document.getElementById('questionList');
+
+        let setquiz, setquestion = "";
+
+        let MainQuizList = {
+            "quizs": [],
+            "questions": {}
+        };
+
+        let ConfList = {
+            "new":{
+                "quizs": [],
+                "questions": {}
+            }
+        };
+
+        qList.addEventListener("click", function() {
+            const content = document.getElementById('questioncontent');
+
+            const answer1 = document.getElementById('answer1');
+            const answer2 = document.getElementById('answer2');
+            const answer3 = document.getElementById('answer3');
+            const answer4 = document.getElementById('answer4');
+
+            if (setquestion !== this.value){
+
+                setquestion = this.value
+
+                content.value = MainQuizList["questions"][setquiz][setquestion]["content"]
+
+                answer1.value = MainQuizList["questions"][setquiz][setquestion]["1"]
+                answer2.value = MainQuizList["questions"][setquiz][setquestion]["2"]
+                answer3.value = MainQuizList["questions"][setquiz][setquestion]["3"]
+                answer4.value = MainQuizList["questions"][setquiz][setquestion]["4"]
+            }
+        });
+
+        function AppQuiz() {
+            const Input = document.getElementById('quizInput');
+            const List = document.getElementById('quizList');
+            const text = document.getElementById('quiztext');
+            
+            if (Input.style.display === "none"){
+                Input.style.display = "block";
+            }
+            else if(Input.style.display === "block" && text.value.length > 0){
+                MainQuizList["quizs"].push(text.value)
+                MainQuizList["questions"][text.value] = {}
+
+                ConfList["new"]["quizs"].push(text.value)
+
+                List.add(new Option(text.value, text.value));
+                text.value = "";
+                Input.style.display = "none";
+            }
+        }
+
+        function ConfQuiz(){
+            setquiz = document.getElementById('quizList').value;
+
+            if (setquiz.length > 0){
+                const quezForm = document.getElementById('quizForm');
+                const questionForm = document.getElementById('questionForm');
+
+                quezForm.style.display = "none";
+                questionForm.style.display = "block";
+            }
+
+        }
+
+        function AddQuestion() {
+            const Input = document.getElementById('questionInput');
+            const List = document.getElementById('questionList');
+            const text = document.getElementById('questiontext');
+
+            if (Input.style.display === "none"){
+                Input.style.display = "block";
+            }
+            else if(Input.style.display === "block" && text.value.length > 0){
+                console.log(MainQuizList)
+                console.log(ConfList)
+                MainQuizList["questions"][setquiz][text.value] = {
+                    "content": "",
+                    "1": "",
+                    "2": "",
+                    "3": "",
+                    "4": ""
+                }
+
+                ConfList["new"]["questions"][text.value] = {}
+
+                List.add(new Option(text.value, text.value));
+                text.value = ""
+                Input.style.display = "none";
+            }
+        }
+
+        function SaveQuestion(){
+            const content = document.getElementById('questioncontent').value;
+            console.log(setquestion)
+
+            if (setquestion.length > 0){
+
+                const answer1 = document.getElementById('answer1').value;
+                const answer2 = document.getElementById('answer2').value;
+                const answer3 = document.getElementById('answer3').value;
+                const answer4 = document.getElementById('answer4').value;
+
+                MainQuizList["questions"][setquiz][setquestion]["content"] = content;
+                MainQuizList["questions"][setquiz][setquestion]["1"] = answer1;
+                MainQuizList["questions"][setquiz][setquestion]["2"] = answer2;
+                MainQuizList["questions"][setquiz][setquestion]["3"] = answer3;
+                MainQuizList["questions"][setquiz][setquestion]["4"] = answer4;
+
+                ConfList["new"]["questions"][setquestion]["content"] = content;
+                ConfList["new"]["questions"][setquestion]["1"] = answer1;
+                ConfList["new"]["questions"][setquestion]["2"] = answer2;
+                ConfList["new"]["questions"][setquestion]["3"] = answer3;
+                ConfList["new"]["questions"][setquestion]["4"] = answer4;
+                ConfList["new"]["questions"][setquestion]["quiz"] = setquiz;
+            }
+
+        }
+
+        function submitForm() {
+            fetch('/admin/setconf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(ConfList),
+            })
+                .then(response => {
+                    if (response.status === 404) {
+                        alert('Помилка при авторизації');
+                    }
+                    if (response.status === 200){
+                        alert('Зміни успішно збережені на сервері')
+                    }
+                })
+                .catch(error => alert('Помилка при відправці POST-запиту:'));
+        }
+
+        fetch('/get/quizlist')
+                .then(response => {
+                    if (response.status === 200) {
+                        
+                        response.json().then(data => {
+                            MainQuizList["quizs"] = data.response
+
+                            const quizList = document.getElementById('quizList');
+
+                            MainQuizList["quizs"].forEach(function (i){
+                                quizList.add(new Option(i, i))
+                            })
+                        });
+                    } else {
+
+                    }
+                })
+                .catch(error => console.error('Помилка при відправці запиту:', error));
+    </script>
+</body>
+</html>

@@ -75,7 +75,7 @@
         <p>Не гайте часу, почніть свою вікторинну подорож прямо зараз! Реєстрація безкоштовна та проста...</p>
     </section>
     <footer>
-        <button id="goToSecondPageButton" onclick="window.location.href='/quiz'">Перейти на другу сторінку</button>
+        <button id="goToSecondPageButton" onclick="window.location.href='/quiz.html'">Перейти на другу сторінку</button>
         <p>Приєднуйтесь до "Вікториноманії" - де розум зустрічається з веселим навчанням!</p>
     </footer>
 
@@ -83,7 +83,7 @@
 
         function sendRequest() {
 
-            fetch('/log')
+            fetch('/api/log')
                 .then(response => {
                     if (response.status === 200) {
 
@@ -102,7 +102,7 @@
         }
 
         function delog() {
-            fetch('/delog')
+            fetch('/api/delog')
             location.reload()
         }
 

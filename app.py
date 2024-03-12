@@ -1,3 +1,3 @@
-from Core.Root import *
+from Core.Root import app
 
-RunApp()
+app.run()

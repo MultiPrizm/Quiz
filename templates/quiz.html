@@ -107,7 +107,7 @@
             const first_form = document.getElementById("firstform");
             const main_form = document.getElementById("mainform");
 
-            questionlist = await request('GET', `/get/question/${quizlist.value}`);
+            questionlist = await request('GET', `/api/get/question/${quizlist.value}`);
             console.log(questionlist)
 
             questionlist = questionlist.response
@@ -219,7 +219,7 @@
             button.addEventListener('click', quizProcess);
         });
 
-        fetch('/get/quizlist')
+        fetch('/api/get/quizlist')
                 .then(response => {
                     if (response.status === 200) {
                         

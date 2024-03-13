@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сторінка Квізу</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #3498ff;
+        }
+        .quiz-container {
+            width: 100%;
+            height: 20vh;
+            background-color: #34c2ff;
+            text-align: center;
+            padding: 20px;
+        }
+        .additional-forms {
+            height: 80vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: stretch;
+            text-align: center;
+        }
+        .additional-form {
+            width: 48%;
+            margin: 1%;
+            padding: 20px;
+            background-color: #7B68EE;
+            box-sizing: border-box;
+        }
+        .main-form{
+            width: 100%;
+            height: 100%;
+            background-color: #3498ff;
+        }
+        .first-form{
+            width: 30%;
+            height: 30%;
+            background-color: #34c2ff;
+            margin-left: 35%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onmousedown="return false" onselectstart="return false">
+
+    <form class="first-form" id="firstform">
+        <h2>Оберіть квіз</h2>
+        <select id="quizlist"></select>
+        <br>
+        <button type="button" onclick="setquiz()">почати</button>
+    </form>
+
+    <form class="main-form" style="display: none;" id="mainform">
+
+        <div class="quiz-container">
+            <h2 id="t0">Форма Квізу</h2>       
+        </div>
+
+        <div class="additional-forms">
+            <div class="additional-form" id="b1">
+                <label id="t1">vfsf</label>
+            </div>
+
+            <div class="additional-form" id="b2">
+                <label id="t2">efewf</label>
+            </div>
+
+            <div class="additional-form" id="b3">
+                <label id="t3">ergrg</label>
+            </div>
+
+            <div class="additional-form" id="b4">
+                <label id="t4">awe</label>
+            </div>
+        </div>
+
+    </form>
+
+    <form class="first-form" id="lastform" style="display: none;">
+        <h2>ви пройшли вікторину</h2>
+        <br>
+        <button type="button" onclick="restart()">далі</button>
+    </form>
+
+    <script>
+
+        let quizlist = document.getElementById("quizlist");
+        let questionlist;
+        let flag = true, numquestion = "", truequestion = [];
+
+        const request = (method, url, body = null) =>{
+            return fetch(url, {
+                method: method,
+                body: body
+            }).then(request => {
+                return request.json()
+            })
+        }
+        
+        async function setquiz(){
+            const first_form = document.getElementById("firstform");
+            const main_form = document.getElementById("mainform");
+
+            questionlist = await request('GET', `/api/get/question/${quizlist.value}`);
+            console.log(questionlist)
+
+            questionlist = questionlist.response
+
+            console.log(questionlist)
+
+            first_form.style.display = "none";
+            main_form.style.display = "block";
+            quizProcess("")
+
+        }
+        
+
+        let sleepSetTimeout_ctrl;
+
+        function sleep(ms) {
+            clearInterval(sleepSetTimeout_ctrl);
+            return new Promise(resolve => sleepSetTimeout_ctrl = setTimeout(resolve, ms));
+        }
+
+        function nextquestion(){
+
+            console.log(questionlist)
+
+            if (questionlist.length <= numquestion+1){
+                const lastform = document.getElementById("lastform");
+                const mainform = document.getElementById("mainform");
+
+                lastform.style.display = 'block';
+                mainform.style.display = 'none';
+
+                return true
+            }
+
+            const t0 = document.getElementById("t0");
+            let text = [];
+
+            text[0] = document.getElementById("t1");
+            text[1] = document.getElementById("t2");
+            text[2] = document.getElementById("t3");
+            text[3] = document.getElementById("t4");
+
+            buffer = questionlist[numquestion][0].split("|");
+
+            t0.innerHTML = buffer[0];
+            truequestion = [];
+
+            for (let i = 1; i <= 4; i++){
+                if (buffer[i][0] === "$"){
+                    truequestion.push(i)
+                    text[i-1].innerHTML = buffer[i].slice(1);
+                }
+                else {
+                    text[i-1].innerHTML = buffer[i];
+                }
+            }
+
+            return false
+        }
+
+        async function quizProcess(event){
+
+            if (numquestion === ""){
+                numquestion = 0;
+                
+                await nextquestion()
+                return
+            }
+
+
+            if (flag && event.target.id[0] === "b"){
+                flag = false;
+                
+                let button = document.getElementById(event.target.id);
+
+                if (!truequestion.indexOf(parseInt(event.target.id[1]))){
+                    button.style.background = "#07f359";
+                    await sleep(400);
+                    button.style.background = "#7B68EE";
+
+                    numquestion ++;
+
+                    await nextquestion()
+
+                } else {
+                    button.style.background = "#ff3636";
+                    await sleep(400);
+                    button.style.background = "#7B68EE";
+                }
+
+                flag = true;
+            }
+
+        }
+
+        function restart(){
+            const lastform = document.getElementById("lastform");
+            const firstform = document.getElementById("firstform");
+
+            lastform.style.display = 'none';
+            firstform.style.display = 'block';
+
+            numquestion = "";
+        }
+
+        let buttons = document.querySelectorAll('.additional-form');
+
+        buttons.forEach(function(button) {
+            button.addEventListener('click', quizProcess);
+        });
+
+        fetch('/api/get/quizlist')
+                .then(response => {
+                    if (response.status === 200) {
+                        
+                        response.json().then(data => {
+                            const res = data.response
+
+                            res.forEach(function (i){
+                                quizlist.add(new Option(i, i))
+                            })
+                        });
+                    }
+                })
+
+    </script>
+</body>
+</html>

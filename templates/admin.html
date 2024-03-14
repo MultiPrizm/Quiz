@@ -46,12 +46,20 @@
 </head>
 <body>
     <h2>Адмін-сторінка</h2>
+    <form id="form401" style="display: none;">
+
+        <label for="dropdown1">Щоб створити квіз спочатку зареєструйтесь</label>
+        <button id="goToSecondPageButton" onclick="window.location.href='/'">Зареєструватися</button>
+
+    </form>
     <form id="quizForm">
 
         <label for="dropdown1">Список квізів:</label>
         <select id="quizList" name="dropdown1">
 
         </select>
+
+        <label type="button" id="quizcode" onclick="GetCode()">Показати код</label>
 
         <button type="button" onclick="AppQuiz()">Додати квіз</button>
         <div id="quizInput" style="display: none;">
@@ -225,7 +233,7 @@
         }
 
         function submitForm() {
-            fetch('/api/admin/setconf', {
+            fetch('/admin/setconf', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
@@ -243,7 +251,26 @@
                 .catch(error => alert('Помилка при відправці POST-запиту:'));
         }
 
-        fetch('/api/get/quizlist')
+        const request = (method, url, body = null) =>{
+            return fetch(url, {
+                method: method,
+                body: body
+            }).then(request => {
+                return request.json()
+            })
+        }
+
+        async function GetCode() {
+            var answer1 = document.getElementById('quizcode');
+
+            data = await request("GET", `/admin/quizcode/${document.getElementById('quizList').value}`);
+
+            //console.log(answer1.innerHTML);
+
+            answer1.textContent = data.response[0][0].toString();
+        }
+
+        fetch('/admin/quizlist')
                 .then(response => {
                     if (response.status === 200) {
                         
@@ -256,6 +283,23 @@
                                 quizList.add(new Option(i, i))
                             })
                         });
+                    } else {
+
+                    }
+                })
+                .catch(error => console.error('Помилка при відправці запиту:', error));
+
+
+        fetch('/log')
+                .then(response => {
+                    if (response.status === 401) {
+                        
+                        const form1 = document.getElementById('quizForm');
+                        const form2 = document.getElementById('form401');
+
+                        form1.style.display = "none";
+                        form2.style.display = "block";
+
                     } else {
 
                     }

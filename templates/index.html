@@ -50,6 +50,7 @@
     <header>
         <button id="registerButton" onclick="window.location.href='/login.html'">Реєстрація</button>
         <button id="loginButton" onclick="window.location.href='/login.html'">Вхід</button>
+        <button id="adminButton" style="display: none;" onclick="window.location.href='/admin.html'">Створення вікторин</button>
         <button id="exitButton" onclick=delog() style="display: none;">Вийти з акаунту</button>
         <div id="userFrame" class="user-frame" style="display: none;"></div>
         <h1>Ласкаво просимо на "Вікториноманію"!</h1>
@@ -75,7 +76,7 @@
         <p>Не гайте часу, почніть свою вікторинну подорож прямо зараз! Реєстрація безкоштовна та проста...</p>
     </section>
     <footer>
-        <button id="goToSecondPageButton" onclick="window.location.href='/quiz.html'">Перейти на другу сторінку</button>
+        <button id="goToSecondPageButton" onclick="window.location.href='/quiz.html'">Почати</button>
         <p>Приєднуйтесь до "Вікториноманії" - де розум зустрічається з веселим навчанням!</p>
     </footer>
 
@@ -83,7 +84,7 @@
 
         function sendRequest() {
 
-            fetch('/api/log')
+            fetch('/log')
                 .then(response => {
                     if (response.status === 200) {
 
@@ -91,6 +92,7 @@
                         document.getElementById('loginButton').style.display = 'none';
                         document.getElementById('userFrame').style.display = 'block';
                         document.getElementById('exitButton').style.display = 'block';
+                        document.getElementById('adminButton').style.display = 'block';
                         response.json().then(data => {
                             document.getElementById('userFrame').innerText = 'З поверненям, ' + data.name + '!';
                         });
@@ -102,7 +104,7 @@
         }
 
         function delog() {
-            fetch('/api/delog')
+            fetch('/delog')
             location.reload()
         }
 

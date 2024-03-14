@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, random
 
 
 
@@ -17,7 +17,9 @@ Scripts = {
         '''
         CREATE TABLE IF NOT EXISTS quiz(
         
-            name TEXT PRIMARY KEY NOT NULL    
+            name TEXT NOT NULL,
+            root TEXT NOT NULL,
+            code TEXT NOT NULL    
 
         );
         ''',
@@ -49,9 +51,9 @@ Scripts = {
     ''',
 
     "AddQuiz":'''
-        INSERT OR IGNORE INTO quiz(name)
+        INSERT OR IGNORE INTO quiz(name, root, code)
 
-                VALUES (?);
+                VALUES (?, ?, ?);
     ''',
 
     "AddQuestion":'''
@@ -62,6 +64,18 @@ Scripts = {
 
     "GetQuiz":'''
         SELECT name FROM quiz;
+    ''',
+
+    "GetUserQuiz":'''
+        SELECT name FROM quiz WHERE root = ?;
+    ''',
+
+    "GetCode":'''
+        SELECT code FROM quiz WHERE root = ? AND name = ?;
+    ''',
+
+    "GetQuizForCode":'''
+        SELECT * FROM quiz WHERE code = ?;
     ''',
 
     "GetQuestion":'''
@@ -97,6 +111,7 @@ def CheckPassword(name, password):
 
     cursor.execute(Scripts["Select"], (name,))
     check_user = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     if not check_user:
@@ -106,13 +121,30 @@ def CheckPassword(name, password):
     else:
         return True, False, False
 
-def SetQuezConf(conf):
+def SetQuezConf(conf, user):
     conn = sqlite3.connect("app.db")
 
     cursor = conn.cursor()
 
+    code = ""
+    
+    while True:
+
+        code = random_code()
+
+        cursor.execute(Scripts["GetQuizForCode"], (code,))
+
+        buffer = cursor.fetchall()
+
+        if buffer:
+            pass
+        else:
+            break
+
     for i in conf["new"]["quizs"]:
-        cursor.execute(Scripts["AddQuiz"], (str(i),))
+        cursor.execute(Scripts["AddQuiz"], (str(i), user, code))
+    
+    print(conf)
     
     for i in conf["new"]["questions"].keys():
         content = conf["new"]["questions"][i]["content"]
@@ -121,8 +153,8 @@ def SetQuezConf(conf):
         answer3 = conf["new"]["questions"][i]["3"]
         answer4 = conf["new"]["questions"][i]["4"]
 
-        cursor.execute(Scripts["AddQuestion"], (i, conf["new"]["questions"][i]["quiz"], f"{content}|{answer1}|{answer2}|{answer3}|{answer4}"))
-
+        cursor.execute(Scripts["AddQuestion"], (i, code, f"{content}|{answer1}|{answer2}|{answer3}|{answer4}"))
+    cursor.close()
     conn.commit()
     conn.close()
     return True
@@ -143,6 +175,34 @@ def GetQuiz():
 
     return response
 
+def GetCode(user, quiz):
+    conn = sqlite3.connect("app.db")
+
+    cursor = conn.cursor()
+
+    cursor.execute(Scripts["GetCode"], (user, quiz))
+    quezList = cursor.fetchall()
+    conn.close()
+
+    return quezList
+
+def GetUserQuiz(user):
+    conn = sqlite3.connect("app.db")
+
+    cursor = conn.cursor()
+
+    cursor.execute(Scripts["GetUserQuiz"], (user,))
+    quezList = cursor.fetchall()
+    conn.close()
+
+    response = []
+
+    for i in quezList:
+        response.append(i[0])
+
+    return response
+
+
 def GetQuestion(quez):
     conn = sqlite3.connect("app.db")
 
@@ -158,6 +218,17 @@ def GetQuestion(quez):
     else:
         return False
 
+def random_code():
+    
+    prefab = "0a1b2c3d4e5f6g7h8i9jklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+    code = ""
+
+    for i in range(32):
+        code += prefab[random.randint(0, len(prefab)-1)]
+
+    return code
+
 
 if __name__ == "__main__":
     conn = sqlite3.connect("app.db")
@@ -168,7 +239,7 @@ if __name__ == "__main__":
     
     #cursor.execute('''SELECT * FROM users''')
 
-    cursor.execute('''SELECT * FROM questions''')
+    cursor.execute('''SELECT * FROM quiz''')
 
     a = cursor.fetchall()
     

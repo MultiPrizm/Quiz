@@ -1,65 +1,35 @@
-import sqlite3, random
+import mysql.connector, random, logging
 
-
+logging.basicConfig(filename='errors.log', level=logging.ERROR)
 
 Scripts = {
-    "Create":[
-        '''
-        CREATE TABLE IF NOT EXISTS users(
-        
-            name TEXT PRIMARY KEY NOT NULL,    
-            password INT NOT NULL,
-            status TEXT NOT NULL
-
-        );
-        ''',
-
-        '''
-        CREATE TABLE IF NOT EXISTS quiz(
-        
-            name TEXT NOT NULL,
-            root TEXT NOT NULL,
-            code TEXT NOT NULL    
-
-        );
-        ''',
-
-        '''
-        CREATE TABLE IF NOT EXISTS questions(
-        
-            name TEXT NOT NULL,
-            quiz TEXT NOT NULL,    
-            questions TEXT NOT NULL
-        );
-        '''
-    ],
-
+    
     "AddUser":'''
         INSERT INTO users(name, password, status)
 
-                VALUES (?, ?, 'user');
+                VALUES (%s, %s, %s);
     ''',
 
     "Select":'''
-        SELECT * FROM users WHERE name = ?;
+        SELECT * FROM users WHERE name = %s;
     ''',
 
     "AddAdmin":'''
         INSERT INTO users(name, password, status)
 
-                VALUES (?, ?, 'admin');
+                VALUES (%s, %s, 'admin');
     ''',
 
     "AddQuiz":'''
-        INSERT OR IGNORE INTO quiz(name, root, code)
+        INSERT quiz(name, root, code)
 
-                VALUES (?, ?, ?);
+                VALUES (%s, %s, %s);
     ''',
 
     "AddQuestion":'''
         INSERT INTO questions(name, quiz, questions)
 
-                VALUES (?, ?, ?);
+                VALUES (%s, %s, %s);
     ''',
 
     "GetQuiz":'''
@@ -67,155 +37,228 @@ Scripts = {
     ''',
 
     "GetUserQuiz":'''
-        SELECT name FROM quiz WHERE root = ?;
+        SELECT name FROM quiz WHERE root = %s;
     ''',
 
     "GetCode":'''
-        SELECT code FROM quiz WHERE root = ? AND name = ?;
+        SELECT code FROM quiz WHERE root = %s AND name = %s;
     ''',
 
     "GetQuizForCode":'''
-        SELECT * FROM quiz WHERE code = ?;
+        SELECT * FROM quiz WHERE code = %s;
     ''',
 
     "GetQuestion":'''
-        SELECT questions FROM questions WHERE quiz = ?;
+        SELECT questions FROM questions WHERE quiz = %s;
     '''
 }
 
 
 def AddUser(name, password):
-    conn = sqlite3.connect("app.db")
 
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute(Scripts["Select"], (name,))
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    check_name = cursor.fetchall()
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM users")
+        cursor.execute(Scripts["Select"], (name,))
 
-    if check_name:
+        check_name = cursor.fetchall()
+
+        if check_name:
+            return False
+        
+        cursor.execute(Scripts["AddUser"], (str(name), str(password), "user"))
+        conn.commit()
+        cursor.close()
+        
+        return True
+    
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
         return False
-    
-    cursor.execute(Scripts["AddUser"], (name, password))
-    conn.commit()
-    
-    conn.close()
-    return True
 
 def CheckPassword(name, password):
-    conn = sqlite3.connect("app.db")
 
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute(Scripts["Select"], (name,))
-    check_user = cursor.fetchall()
-    cursor.close()
-    conn.close()
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    if not check_user:
-        return False, False, False
-    elif str(check_user[0][1]) == str(password):
-        return True, True, check_user[0][2]
-    else:
-        return True, False, False
+        cursor = conn.cursor()
+
+        cursor.execute(Scripts["Select"], (name,))
+        check_user = cursor.fetchall()
+        cursor.close()
+
+        if not check_user:
+            return False, False, False
+        elif str(check_user[0][1]) == str(password):
+            return True, True, check_user[0][2]
+        else:
+            return True, False, False
+        
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
+        return False
 
 def SetQuezConf(conf, user):
-    conn = sqlite3.connect("app.db")
 
-    cursor = conn.cursor()
+    try:
 
-    code = ""
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
+
+        cursor = conn.cursor()
+
+        code = ""
+        
+        while True:
+
+            code = random_code()
+
+            cursor.execute(Scripts["GetQuizForCode"], (code,))
+
+            buffer = cursor.fetchall()
+
+            if buffer:
+                pass
+            else:
+                break
+
+        for i in conf["new"]["quizs"]:
+            cursor.execute(Scripts["AddQuiz"], (str(i), user, code))
+        
+        for i in conf["new"]["questions"].keys():
+            content = conf["new"]["questions"][i]["content"]
+            answer1 = conf["new"]["questions"][i]["1"]
+            answer2 = conf["new"]["questions"][i]["2"]
+            answer3 = conf["new"]["questions"][i]["3"]
+            answer4 = conf["new"]["questions"][i]["4"]
+
+            cursor.execute(Scripts["AddQuestion"], (i, code, f"{content}|{answer1}|{answer2}|{answer3}|{answer4}"))
+        cursor.close()
+        conn.commit()
+        return True
     
-    while True:
-
-        code = random_code()
-
-        cursor.execute(Scripts["GetQuizForCode"], (code,))
-
-        buffer = cursor.fetchall()
-
-        if buffer:
-            pass
-        else:
-            break
-
-    for i in conf["new"]["quizs"]:
-        cursor.execute(Scripts["AddQuiz"], (str(i), user, code))
-    
-    print(conf)
-    
-    for i in conf["new"]["questions"].keys():
-        content = conf["new"]["questions"][i]["content"]
-        answer1 = conf["new"]["questions"][i]["1"]
-        answer2 = conf["new"]["questions"][i]["2"]
-        answer3 = conf["new"]["questions"][i]["3"]
-        answer4 = conf["new"]["questions"][i]["4"]
-
-        cursor.execute(Scripts["AddQuestion"], (i, code, f"{content}|{answer1}|{answer2}|{answer3}|{answer4}"))
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return True
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
+        return False
 
 def GetQuiz():
-    conn = sqlite3.connect("app.db")
+    try:
 
-    cursor = conn.cursor()
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    cursor.execute(Scripts["GetQuiz"])
-    quezList = cursor.fetchall()
-    conn.close()
+        cursor = conn.cursor()
 
-    response = []
+        cursor.execute(Scripts["GetQuiz"])
+        quezList = cursor.fetchall()
+        cursor.close()
 
-    for i in quezList:
-        response.append(i[0])
+        response = []
 
-    return response
+        for i in quezList:
+            response.append(i[0])
+
+        return response
+    
+    except BaseException as e:
+        logging.error(f"[ERROR]:{e}")
+        return False
 
 def GetCode(user, quiz):
-    conn = sqlite3.connect("app.db")
 
-    cursor = conn.cursor()
+    try:
 
-    cursor.execute(Scripts["GetCode"], (user, quiz))
-    quezList = cursor.fetchall()
-    conn.close()
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    return quezList
+        cursor = conn.cursor()
+
+        cursor.execute(Scripts["GetCode"], (user, quiz))
+        quezList = cursor.fetchall()
+        cursor.close()
+
+        return quezList
+    
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
+        return False
 
 def GetUserQuiz(user):
-    conn = sqlite3.connect("app.db")
+    try:
 
-    cursor = conn.cursor()
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    cursor.execute(Scripts["GetUserQuiz"], (user,))
-    quezList = cursor.fetchall()
-    conn.close()
+        cursor = conn.cursor()
 
-    response = []
+        cursor.execute(Scripts["GetUserQuiz"], (user,))
+        quezList = cursor.fetchall()
+        cursor.close()
 
-    for i in quezList:
-        response.append(i[0])
+        response = []
 
-    return response
+        for i in quezList:
+            response.append(i[0])
+
+        return response
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
+        return False
 
 
 def GetQuestion(quez):
-    conn = sqlite3.connect("app.db")
+    try:
 
-    cursor = conn.cursor()
-    print(quez)
+        conn = mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="5170Ill$",
+            database="mydatabase"
+        )
 
-    cursor.execute(Scripts["GetQuestion"], (quez,))
-    quezList = cursor.fetchall()
-    conn.close()
+        cursor = conn.cursor()
 
-    if quezList:
-        return quezList
-    else:
+        cursor.execute(Scripts["GetQuestion"], (quez,))
+        quezList = cursor.fetchall()
+        cursor.close()
+
+        if quezList:
+            return quezList
+        else:
+            return False
+        
+    except BaseException as e:
+        logging.exception(f"[ERROR]:{e}")
         return False
 
 def random_code():
@@ -229,24 +272,4 @@ def random_code():
 
     return code
 
-
-if __name__ == "__main__":
-    conn = sqlite3.connect("app.db")
-
-    cursor = conn.cursor()
-    for i in Scripts["Create"]:
-        cursor.execute(i)
-    
-    #cursor.execute('''SELECT * FROM users''')
-
-    cursor.execute('''SELECT * FROM quiz''')
-
-    a = cursor.fetchall()
-    
-    for i in a:
-        print(a)
-    
-    #cursor.execute(Scripts["AddAdmin"], ("admin", "admin"))
-    #conn.commit()
-    
     
